@@ -16,6 +16,8 @@ $primary: #9013fe;
 $medium: 800px;
 $large: 1400px;
 
+$blurRad: 20px;
+
 // import site overrides after variables after
 // variables have been declared
 @import "../overrides";

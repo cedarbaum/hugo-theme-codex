@@ -21,12 +21,13 @@ Game.prototype = {
 
     init: function() {
         this.resizeBoardAndRedraw();
+        this.firstSpawn = true;
     },
 
     resizeBoardAndRedraw: function() {
         const { width, height } = this.canvas.getBoundingClientRect();
-        var numX = Math.ceil(width / this.cfg.cellSize) + this.cfg.margin;
-        var numY = Math.ceil(height / this.cfg.cellSize) + this.cfg.margin;
+        var numX = Math.ceil(width / this.cfg.cellSize) + (2 * this.cfg.margin);
+        var numY = Math.ceil(height / this.cfg.cellSize) + (2 * this.cfg.margin);
 
         if (this.matrix == undefined) {
             this.matrix = new Array(numX);
@@ -81,11 +82,13 @@ Game.prototype = {
             return;
         }
 
-        for (x = 0; x < this.matrix.length; x++) {
-            for (y = 0; y < this.matrix[x].length; y++) {
+        for (x = this.cfg.margin; x < this.matrix.length; x++) {
+            for (y = this.cfg.margin; y < this.matrix[x].length; y++) {
                 if (this.matrix[x][y]) {
-                    this.ctx.fillRect(x * this.cfg.cellSize + 1,
-                                      y * this.cfg.cellSize + 1,
+                    var adjX = x - this.cfg.margin;
+                    var adjY = y - this.cfg.margin;
+                    this.ctx.fillRect(adjX * this.cfg.cellSize + 1,
+                                      adjY * this.cfg.cellSize + 1,
                                       this.cfg.cellSize - 1,
                                       this.cfg.cellSize - 1);
                 }
@@ -153,10 +156,108 @@ Game.prototype = {
         this.draw();
     },
 
+    spawnRandGlider: function() {
+        var spawnLoc = getRandomInt(0, 3);
+        var widthViewport = this.matrix.length - 2 * this.cfg.margin;
+        var heightViewport = this.matrix[0].length - 2 * this.cfg.margin;
+        var bottomRow = this.cfg.margin + heightViewport;
+        var rightMostCol = this.cfg.margin + widthViewport;
+
+        if (this.firstSpawn) {
+            var x = Math.ceil(this.cfg.margin - 3);
+            var y = Math.ceil(this.cfg.margin + (heightViewport / 2));
+            this.drawURGlider(x, y);
+
+            this.firstSpawn = false;
+            return;
+        }
+
+        if (spawnLoc == 0) {
+            // Top
+            var xCenter = getRandomInt(this.cfg.margin, this.matrix.length - 3);
+            var yCenter = getRandomInt(3, this.cfg.margin - 3);
+
+            this.drawLRGlider(xCenter, yCenter);
+        }
+        else if (spawnLoc == 1) {
+            // Left
+            var xCenter = getRandomInt(3, this.cfg.margin - 3);
+            var yCenter = getRandomInt(this.cfg.margin, this.matrix[0].length - 3);
+
+            this.drawURGlider(xCenter, yCenter);
+        }
+        else if (spawnLoc == 2) {
+            // Bottom
+            var xCenter = getRandomInt(this.cfg.margin, this.matrix.length - 3);
+            var yCenter = getRandomInt(bottomRow, bottomRow + this.cfg.margin - 3);
+
+            this.drawULGlider(xCenter, yCenter);
+        }
+        else {
+            // Right
+            var xCenter = getRandomInt(rightMostCol, rightMostCol + this.cfg.margin - 3);
+            var yCenter = getRandomInt(this.cfg.margin, this.matrix[0].length - 3);
+
+            this.drawLLGlider(xCenter, yCenter);
+        }
+    },
+
+    drawLRGlider: function(xCenter, yCenter) {
+        this.matrix[xCenter][yCenter] = false;
+        this.matrix[xCenter - 1][yCenter - 1] = false;
+        this.matrix[xCenter - 1][yCenter] = false;
+        this.matrix[xCenter + 1][yCenter - 1] = false;
+
+        this.matrix[xCenter][yCenter - 1] = true;
+        this.matrix[xCenter + 1][yCenter] = true;
+        this.matrix[xCenter - 1][yCenter + 1] = true;
+        this.matrix[xCenter][yCenter + 1] = true;
+        this.matrix[xCenter + 1][yCenter + 1] = true;
+    },
+
+    drawURGlider: function(xCenter, yCenter) {
+        this.matrix[xCenter][yCenter] = false;
+        this.matrix[xCenter - 1][yCenter] = false;
+        this.matrix[xCenter - 1][yCenter + 1] = false;
+        this.matrix[xCenter + 1][yCenter + 1] = false;
+
+        this.matrix[xCenter - 1][yCenter - 1] = true;
+        this.matrix[xCenter][yCenter - 1] = true;
+        this.matrix[xCenter + 1][yCenter - 1] = true;
+        this.matrix[xCenter + 1][yCenter] = true;
+        this.matrix[xCenter][yCenter + 1] = true;
+    },
+
+    drawULGlider: function(xCenter, yCenter) {
+        this.matrix[xCenter][yCenter] = false;
+        this.matrix[xCenter + 1][yCenter] = false;
+        this.matrix[xCenter - 1][yCenter + 1] = false;
+        this.matrix[xCenter + 1][yCenter + 1] = false;
+
+        this.matrix[xCenter - 1][yCenter - 1] = true;
+        this.matrix[xCenter][yCenter - 1] = true;
+        this.matrix[xCenter + 1][yCenter - 1] = true;
+        this.matrix[xCenter - 1][yCenter] = true;
+        this.matrix[xCenter][yCenter + 1] = true;
+    },
+
+    drawLLGlider: function(xCenter, yCenter) {
+        this.matrix[xCenter][yCenter - 1] = false;
+        this.matrix[xCenter + 1][yCenter - 1] = false;
+        this.matrix[xCenter][yCenter] = false;
+        this.matrix[xCenter + 1][yCenter + 1] = false;
+
+        this.matrix[xCenter - 1][yCenter - 1] = true;
+        this.matrix[xCenter - 1][yCenter] = true;
+        this.matrix[xCenter + 1][yCenter] = true;
+        this.matrix[xCenter - 1][yCenter + 1] = true;
+        this.matrix[xCenter][yCenter + 1] = true;
+    },
+
     randomize: function() {
         for (var x = 0; x < this.matrix.length; x++) {
             for (var y = 0; y < this.matrix[x].length; y++) {
-                this.matrix[x][y] = Math.random() < 0.2;
+                this.matrix[x][y] = Math.random() < 0.3;
             }
         }
 
@@ -164,6 +265,10 @@ Game.prototype = {
     },
 
     toggleCell: function(cx, cy) {
+
+        cx += this.cfg.margin;
+        cy += this.cfg.margin;
+
         if (cx >= 0 && cx < this.matrix.length && cy >= 0 && cy < this.matrix[0].length) {
             this.matrix[cx][cy] = !this.matrix[cx][cy];
             this.draw();
@@ -173,11 +278,16 @@ Game.prototype = {
 
 var timer;
 var game = new Game(document.getElementById("game"));
-var nextFrameTime;
+var nextFrameTime, nextGliderSpawnTime;
 
+function getRandomInt(min, max) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
 function animate() {
     if (timer === undefined) {
-        timer = setInterval(animateStep, 500);
+        timer = setInterval(animateStep, 200);
     } else {
         clearInterval(timer);
         timer = undefined;
@@ -189,6 +299,11 @@ function animateStep() {
     const secondsSinceEpoch = Math.round(Date.now() / 1000)
     if (nextFrameTime != undefined && secondsSinceEpoch < nextFrameTime) {
         return;
+    }
+
+    if (secondsSinceEpoch >= nextGliderSpawnTime) {
+        game.spawnRandGlider();
+        nextGliderSpawnTime = secondsSinceEpoch + 5;
     }
 
     game.step();
@@ -227,5 +342,7 @@ function gameOnClick(e) {
 }
 
 
-game.randomize();
+// game.randomize();
+const secondsSinceEpoch = Math.round(Date.now() / 1000)
+nextGliderSpawnTime = secondsSinceEpoch + 2;
 animate();

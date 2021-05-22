@@ -9,6 +9,9 @@
   background: $white;
   visibility: hidden;
   z-index: 2;
+
+  // background-color: rgba(255, 255, 255, .15);
+  // backdrop-filter: blur($blurRad);
   padding-right: 2em;
   padding-bottom: 2em;
 
@@ -69,13 +72,19 @@
   color: $grey;
   text-decoration: none;
   font-size: 2em;
+  -webkit-filter: grayscale(100%);
+  filter: grayscale(100%);
 
   &.active {
+    -webkit-filter: none;
+    filter: none;
     color: $black;
   }
 
   &:hover {
     color: $black;
+    -webkit-filter: none;
+    filter: none;
   }
 
   @media screen and (min-width: $medium) {

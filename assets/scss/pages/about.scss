@@ -16,7 +16,14 @@
 .splash {
 
   padding: 2em;
+
   background-color: white;
+
+  @supports (backdrop-filter: blur($blurRad)) {
+      background-color: rgba(255, 255, 255, .15);
+      backdrop-filter: blur($blurRad);
+  }
+
   z-index: 1;
 
   h1 {
